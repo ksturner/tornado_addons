@@ -20,18 +20,42 @@ class RouteTests(unittest.TestCase):
 
         route_redirect('/other_redir', '/abc', name='other')
 
+    def tearDown(self):
+        # We must clean out routes every time if test cases add to them.
+        r = route.get_routes()
+        r.clear()
 
     def test_num_routes(self):
-        self.assertTrue( len(route.get_routes()) == 4 ) # 2 routes + 2 redir
+        self.assertEqual( len(route.get_routes()['']), 4 ) # 2 routes + 2 redir
 
     def test_routes_ordering(self):
         # our third handler's url route should be '/abc'
-        self.assertTrue( route.get_routes()[2].reverse() == '/abc' )
+        self.assertEqual( route.get_routes()[''][2].reverse(), '/abc' )
 
     def test_routes_name(self):
         # our first handler's url route should be '/xyz'
-        t = tornado.web.Application(route.get_routes(), {})
+        host_routes = route.get_routes()
+        t = tornado.web.Application([], {})
+        for host, routes in host_routes.iteritems():
+            t.add_handlers(host, routes)
+
         self.assertTrue( t.reverse_url('abc') )
         self.assertTrue( t.reverse_url('other') )
 
+    def test_hosts(self):
+        host_routes = route.get_routes()
+        self.assertEqual( len(host_routes.keys()), 1 )
+
+        h = 'blah.somewhere.com'
+
+        @route('/abc', host=h)
+        class AbcFake2(object):
+            pass
+        host_routes = route.get_routes()
+        self.assertEqual( len(host_routes.keys()), 2 )
+        self.assertTrue( h in host_routes.keys() )
+
+        t = tornado.web.Application([], {})
+        for host, routes in host_routes.iteritems():
+            t.add_handlers(host, routes)
 
