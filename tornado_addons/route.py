@@ -40,6 +40,7 @@ class route(object):
     Jeremy Kelley - initial work
     Peter Bengtsson - redirects, named routes and improved comments
     Ben Darnell - general awesomeness
+    Kevin Turner - adding host support
     """
 
     _routes = { '': [] }    # '' is for default host .*
@@ -58,6 +59,16 @@ class route(object):
                                                        _handler,
                                                        name=name))
         return _handler
+
+    @classmethod
+    def clear_routes(self):
+        self._routes = { '': [] }
+
+    @classmethod
+    def clear_nondefault_routes(self):
+        default_routes = self._routes['']
+        self.clear_routes()
+        self._routes[''] = default_routes
 
     @classmethod
     def get_routes(self):
